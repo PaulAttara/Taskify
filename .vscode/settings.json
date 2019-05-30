@@ -1,0 +1,13 @@
+{
+    "editor.minimap.enabled": false,
+
+    
+
+
+
+"workbench.colorCustomizations": {
+    "editor.selectionBackground": "#185564",
+    "editor.selectionHighlightBackground": "#135564"
+}
+
+}

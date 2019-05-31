@@ -48,7 +48,14 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }]
-})  
+}) 
+
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id',
+    foreignField: 'owner'
+})
+
 // methods for individual user instance, statics for User model
 
 // special method "toJSON" 

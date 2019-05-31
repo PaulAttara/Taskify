@@ -49,6 +49,18 @@ const userSchema = new mongoose.Schema({
         }
     }]
 })  
+// methods for individual user instance, statics for User model
+
+// special method "toJSON" 
+userSchema.methods.toJSON = function() {
+    const user = this
+    const userObject = user.toObject()
+
+    delete userObject.password
+    delete userObject.tokens
+
+    return userObject
+}
 
 userSchema.methods.generateAuthToken = async function() {
     const user = this

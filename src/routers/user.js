@@ -1,7 +1,11 @@
 const express = require('express')
 const User = require('../models/user')
+const multer = require('multer')
+const sharp = require('sharp')
+
 const authentication = require('../middleware/authentication')
 const router = new express.Router()
+
 
 router.post('/users', async (req, res) => { ///users: api route
 
@@ -87,6 +91,55 @@ router.delete('/users/me', authentication, async (req, res) => {
         res.send(req.user)
     } catch(e) {
         res.status(500).send()
+    }
+})
+ 
+const upload = multer({
+    limits: {
+        // dest: 'avatars', //use to save files locally, otherwise, save to user model
+        fileSize: 1000000,
+    },
+    fileFilter(req, file, cb) {
+        if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){
+            return cb(new Error('Please upload an image'))
+        }
+        cb(undefined, true)
+    }
+})
+// use async when use await
+router.post('/users/me/avatar', authentication, upload.single('avatar'), async(req, res) => {
+    // resize and convert to png
+    const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
+    req.user.avatar = buffer
+    await req.user.save()
+    res.send()  
+}, (error, req, res, next) => {
+    res.status(400).send({ error: error.message }) //overwriting response and filling in body with error msg only rather that html (this argument is to handle uncaught errors as request is processed)
+})
+
+router.delete('/users/me/avatar', authentication, async(req, res) => {
+    if(req.user.avatar === undefined){
+        return res.status(404).send()
+    }
+    req.user.avatar = undefined
+    await req.user.save()
+    res.send()  
+})
+
+// user browser to view this image
+router.get('/users/:id/avatar', async(req, res) => {
+    try{
+        const user = await User.findById(req.params.id)
+
+        if(!user || !user.avatar){
+            throw new Error()
+        }
+
+        res.set('Content-Type', 'image/png')
+        res.send(user.avatar)
+
+    } catch(e){
+        res.status(404).send()
     }
 })
 
